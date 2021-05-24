@@ -4,11 +4,17 @@ import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.spring.application.models.enumeration.City;
 import com.spring.application.models.enumeration.Country;
 import com.spring.application.models.enumeration.State;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 import java.io.Serializable;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @DynamoDBTable(tableName = "address")
 public class Address implements Serializable {
 

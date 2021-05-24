@@ -3,11 +3,17 @@ package com.spring.application.models;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.spring.application.models.enumeration.Tax;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 
 @Slf4j
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @DynamoDBTable(tableName = "businessProfile")
 public class BusinessProfile implements Serializable {
 

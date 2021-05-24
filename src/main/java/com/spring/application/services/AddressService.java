@@ -1,7 +1,9 @@
 package com.spring.application.services;
 
 import com.spring.application.models.Address;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AddressService {
 
     public void update(Address existingAddress, Address updatedAddress){

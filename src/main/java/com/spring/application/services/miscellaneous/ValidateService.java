@@ -16,31 +16,18 @@ public class ValidateService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @HystrixCommand(fallbackMethod = "fall", commandProperties = {
-            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "5"),
-            @HystrixProperty(name = "metrics.rollingStats.timeInMilliseconds", value = "10000") })
-    public boolean validateApi(String url, int retryCount)
+
+    public boolean validateApi(String url)
     {
         HttpAgent<String> httpAgent = new HttpAgent<>();
 
-        //todo: put it in config
-        int maxRetryCount = 5;
-
         String response = httpAgent.getApi(null, null,
-                restTemplate, url, null, String.class);
+                restTemplate, url, null, String.class, 0);
         if (ObjectUtils.isEmpty(response)) {
-            if (retryCount <= maxRetryCount)
-                validateApi(url, retryCount + 1);
-            else {
-                log.error("Request Failed for url: {}", url);
-                return false;
-            }
+            log.error("Request Failed for url: {}", url);
+            return false;
         }
         return true;
     }
 
-
-    private String fall(){
-        return "Validate API is Out of Service!!!";
-    }
 }

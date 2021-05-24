@@ -31,13 +31,11 @@ public class UserProfileController {
     public UserProfileResponse create(@RequestBody UserProfile input) throws Exception {
 
         UserProfileResponse response = this.createResponse(null);
+        UserProfile result = userProfileService.create(input);
 
-            UserProfile result = userProfileService.create(input);
-
-            response = this.createResponse(result);
-            response.setStatus(new StatusResponse(SuccessCodes.OK, 1));
-            return response;
-
+        response = this.createResponse(result);
+        response.setStatus(new StatusResponse(SuccessCodes.OK, 1));
+        return response;
 
     }
 

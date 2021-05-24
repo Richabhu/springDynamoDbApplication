@@ -1,5 +1,7 @@
 package com.spring.application.configuration;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -11,9 +13,12 @@ import java.util.Collections;
 @Slf4j
 public class HttpAgent<T> {
 
-    public T getApi(String clientId, String clientSecret, RestTemplate restTemplate, String url, Long id, Class<T> cls) {
+    @HystrixCommand(fallbackMethod = "fallback")
+    public T getApi(String clientId, String clientSecret, RestTemplate restTemplate, String url, Long id, Class<T> cls, int errCount) {
 
 
+        //todo: put in config
+        int maxRetryCount = 5;
         // create headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -35,6 +40,9 @@ public class HttpAgent<T> {
                 log.info("Request Successful in get Api");
                 return response.getBody();
             } else {
+                if(errCount <= maxRetryCount) {
+                    getApi(clientId, clientSecret, restTemplate, url, id, cls,errCount+1);
+                }
                 log.error("Request Failed in get Api  url:{} and status code:{}",  url, response.getStatusCode());
             }
         } catch (Exception ex) {
@@ -43,4 +51,8 @@ public class HttpAgent<T> {
         return null;
     }
 
+    private String fallback(){
+         log.error("GET REST Api is not working!!!");
+         return null;
+    }
 }

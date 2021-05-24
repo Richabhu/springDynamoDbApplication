@@ -12,19 +12,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserProfileService {
 
-//    UserProfileRepository userProfileRepository;
-//
-//    @Autowired
-//    public UserProfileService(UserProfileRepository userProfileRepository) {
-//        this.userProfileRepository = userProfileRepository;
-//    }
-
     @Autowired
     private DynamoDBMapper mapper;
 
 
     public UserProfile create(UserProfile userProfile){
-
         mapper.save(userProfile);
          return userProfile;
     }

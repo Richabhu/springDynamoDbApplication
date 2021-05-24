@@ -1,64 +1,44 @@
 package com.spring.application.services;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.spring.application.models.Address;
 import com.spring.application.models.BusinessProfile;
-import com.spring.application.repository.AddressRepository;
-import com.spring.application.repository.BusinessProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class BusinessProfileService {
 
     @Autowired
-    AddressRepository addressRepository;
+    private DynamoDBMapper mapper;
 
     @Autowired
-    BusinessProfileRepository businessProfileRepository;
-
-    @Autowired
-    AddressService addressService;
-
-
-//    @HystrixCommand(fallbackMethod = "defaultGreeting")
-//    public String getGreeting() {
-//        return new RestTemplate()
-//                .getForObject("http://localhost:8080/validate", String.class);
-//    }
-//
-//    private String defaultGreeting() {
-//        return "Hello User!";
-//    }
-
+    private AddressService addressService;
 
     public BusinessProfile create(BusinessProfile businessProfile)
     {
         Address legalAddress = businessProfile.getLegalAddress();
-        businessProfile.setLegalAddress(addressRepository.save(legalAddress));
+        mapper.save(legalAddress);
+        businessProfile.setLegalAddress(legalAddress);
 
         Address businessAddress = businessProfile.getBusinessAddress();
-        businessProfile.setBusinessAddress(addressRepository.save(businessAddress));
+        mapper.save(businessAddress);
+        businessProfile.setBusinessAddress(businessAddress);
 
-        return businessProfileRepository.save(businessProfile);
+        mapper.save(businessProfile);
+        return businessProfile;
     }
 
     public BusinessProfile update(BusinessProfile existingBusinessProfile, BusinessProfile updatedProfile){
 
             // update legal address
-            Optional<Address> legalAddr = addressRepository.findById(existingBusinessProfile.getLegalAddress().getId());
-            if(legalAddr.isPresent())
-            {
-                Address existingLegalAddress = legalAddr.get();
-                addressService.update(existingLegalAddress, updatedProfile.getLegalAddress());
-            }
+            Address existingLegalAddress = mapper.load(Address.class, existingBusinessProfile.getLegalAddress().getId());
+            addressService.update(existingLegalAddress, updatedProfile.getLegalAddress());
+
             // update business address
-            Optional<Address> businessAddr = addressRepository.findById(existingBusinessProfile.getBusinessAddress().getId());
-            if(businessAddr.isPresent()){
-                Address existingBusinessAddress = businessAddr.get();
-                addressService.update(existingBusinessAddress, updatedProfile.getBusinessAddress());
-            }
+            Address existingBusinessAddress = mapper.load(Address.class, existingBusinessProfile.getBusinessAddress().getId());
+            addressService.update(existingBusinessAddress, updatedProfile.getBusinessAddress());
+
 
             // updating the remaining field
             existingBusinessProfile.setCompanyName(updatedProfile.getCompanyName());

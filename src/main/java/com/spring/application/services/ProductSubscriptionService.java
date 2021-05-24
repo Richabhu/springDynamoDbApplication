@@ -1,118 +1,83 @@
 package com.spring.application.services;
 
-import com.spring.application.models.Address;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.spring.application.models.BusinessProfile;
 import com.spring.application.models.ProductSubscription;
 import com.spring.application.models.UserProfile;
 import com.spring.application.models.enumeration.Product;
-import com.spring.application.repository.AddressRepository;
-import com.spring.application.repository.BusinessProfileRepository;
-import com.spring.application.repository.ProductSubscriptionRepository;
-import com.spring.application.repository.UserProfileRepository;
 import com.spring.application.services.miscellaneous.ValidateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProductSubscriptionService {
 
     @Autowired
-    UserProfileRepository userProfileRepository;
+    private DynamoDBMapper mapper;
 
     @Autowired
-    ProductSubscriptionRepository productSubscriptionRepository;
+    private BusinessProfileService businessProfileService;
 
     @Autowired
-    BusinessProfileRepository businessProfileRepository;
-
-    @Autowired
-    BusinessProfileService businessProfileService;
-
-    @Autowired
-    AddressRepository addressRepository;
-
-    @Autowired
-    ValidateService validateService;
+    private ValidateService validateService;
 
     public ProductSubscription newSubscription(ProductSubscription productSubscription, String id){
-        Optional<UserProfile> user = userProfileRepository.findById(id);
+        UserProfile userProfile = mapper.load(UserProfile.class, id);
 
         // user has previously subscribed to any of the product
-        if(user.isPresent())
-        {
-            UserProfile userProfile = user.get();
-            productSubscription.setUserProfile(userProfile);
-            // search for its subscribed product to update it
-            Optional<ProductSubscription> existingProductSubscription = productSubscriptionRepository.findByUser(userProfile);
-
-            // already subscribed to any of the product
-            // just append the new product to list of products
-            if(existingProductSubscription.isPresent())
-            {
-                ProductSubscription productSubscribed = existingProductSubscription.get();
-                productSubscribed.setProducts(productSubscription.getProducts()); // update the subscribed products
-                return productSubscriptionRepository.save(productSubscribed);
-            }
-
-            // new product subscription
-            // create its business profile
-            BusinessProfile businessProfile = businessProfileService.create(productSubscription.getBusinessProfile());
-            // set business profile
-            productSubscription.setBusinessProfile(businessProfile);
-            return productSubscriptionRepository.save(productSubscription);
-
+        productSubscription.setUserProfile(id);
+        // search for its subscribed product. search on its sort key
+        ProductSubscription existingProductSubscription = mapper.load(ProductSubscription.class, null, id);
+        // already subscribed to any of the product
+        // just append the new product to list of products
+        if(existingProductSubscription != null) {
+            existingProductSubscription.setProducts(productSubscription.getProducts()); // update the subscribed products
+            mapper.save(existingProductSubscription);
+            return existingProductSubscription;
         }
-        return null;
+         BusinessProfile businessProfile = businessProfileService.create(productSubscription.getBusinessProfile());
+         // set business profile
+         productSubscription.setBusinessProfile(businessProfile);
+         mapper.save(productSubscription);
+         return productSubscription;
 
     }
 
 
     public ProductSubscription updateSubscription(ProductSubscription productSubscription, String id){
-        Optional<UserProfile> user = userProfileRepository.findById(id);
+        UserProfile userProfile = mapper.load(UserProfile.class, id);
 
         // user has previously subscribed to any of the product
-        if(user.isPresent())
+        productSubscription.setUserProfile(id);
+        // search for its subscribed product to update it
+        ProductSubscription productSubscribed = mapper.load(ProductSubscription.class,
+                productSubscription.getId());
+
+        // update this product subscription
+        List<Product> productList = productSubscribed.getProducts();
+        // rest api for validation
+        for( Product product: productList)
         {
-            UserProfile userProfile = user.get();
-            productSubscription.setUserProfile(userProfile);
-            // search for its subscribed product to update it
-            Optional<ProductSubscription> existingProductSubscription = productSubscriptionRepository.findByUser(userProfile);
-
-            if(existingProductSubscription.isPresent())
+            //todo: create a class to store product name and it's corresponding validate api
+            boolean isValidated = validateService.validateApi("http://localhost:8080/validate/");
+            if(!isValidated)
             {
-                // update this product subscription
-                ProductSubscription productSubscribed = existingProductSubscription.get();
-                List<Product> productList = productSubscribed.getProducts();
-
-                // rest api for validation
-                for( Product product: productList)
-                {
-                    //todo: create a class to store product name and it's corresponding validate api
-                    boolean isValidated = validateService.validateApi("", 0);
-                    if(!isValidated)
-                    {
-                        //validation failed
-                        return null;
-                    }
-                }
-                productSubscribed.setProducts(productSubscription.getProducts()); // update the subscribed products
-                // update business profile and address
-                BusinessProfile updatedBusinessProfile = businessProfileService.update(productSubscribed.getBusinessProfile(),
-                        productSubscription.getBusinessProfile());
-                productSubscribed.setBusinessProfile(updatedBusinessProfile);
-
-                return productSubscriptionRepository.save(productSubscribed);
+                //validation failed
+                return null;
             }
-            // user has not subscribed to any product previously
-            return null;
         }
-        // user is not present
-        return null;
+        productSubscribed.setProducts(productSubscription.getProducts()); // update the subscribed products
+        // update business profile and address
+        BusinessProfile updatedBusinessProfile = businessProfileService.update(productSubscribed.getBusinessProfile(),
+                productSubscription.getBusinessProfile());
+        productSubscribed.setBusinessProfile(updatedBusinessProfile);
 
-    }
+         mapper.save(productSubscribed);
+         return productSubscribed;
+        }
+
 
 
 }
