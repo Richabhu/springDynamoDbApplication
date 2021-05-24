@@ -5,26 +5,26 @@ curl --location --request POST 'http://localhost:6969/user/create' \
 --header 'Content-Type: application/json' \
 --header 'Cookie: JSESSIONID=0E7BC4B0BA711B679C949235C8AB595D' \
 --data-raw '{
-    "firstName" : "Richa",
-    "lastName": "Bhuwania"
+    "id": "1",
+    "first_name" : "Richa",
+    "last_name": "Bhuwania"
  }'
 
 Response:
 
 {
     "status": {
-        "statusCode": 200,
-        "statusMessage": "Success",
-        "statusType": "SUCCESS",
-        "totalCount": 1
+        "status_code": 200,
+        "status_message": "Success",
+        "status_type": "SUCCESS",
+        "total_count": 1
     },
-    "userProfileEntity": {
-        "firstName": "Richa",
-        "lastName": "Bhuwania",
-        "userId": "f02e3588-f700-4e28-b29d-44958cd8f06e"
+    "user_profile_entity": {
+        "first_name": "Richa",
+        "last_name": "Bhuwania",
+        "user_id": "642f4064-37f4-4b4f-bc18-193aca1da2f1"
     }
 }
-
 
 
  2. Subscribe to a new Product: User can subscribe to one or more product at a time.
