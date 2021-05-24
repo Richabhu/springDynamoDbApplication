@@ -1,0 +1,15 @@
+The main models of the project:
+
+    Enumerations:
+        The enums used in the project:
+            a. Product -> Stores all the products that the user can subscribe to.
+            b. City -> Store all the city supported
+            c. Country -> Store all the country supported
+            d. State -> Store the states
+            e. Tax -> Stores the tax payment number.
+
+1. Address: It will store the complete address of the user.
+
+2. BusinessProfile: This will store the complete business information that will be common across all the products subscribed.
+
+3. Product Subscription: This will store all the products subscribed.
